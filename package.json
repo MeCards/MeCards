@@ -1,6 +1,6 @@
 {
   "name": "MeCards",
-  "version": "1.0.0-rc.5",
+  "version": "1.0.0-rc.6",
   "description": "Store membership cards offline, locally on your device; no sketchy shit.",
   "keywords": [
     "barcodes",
