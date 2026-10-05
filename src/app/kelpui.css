@@ -27,7 +27,7 @@
 
 	img,
 	svg {
-		&[class*=size-] {
+		&[class*=size-]:not(.inline) {
 			width: var(--font-size);
 		}
 	}
@@ -61,6 +61,13 @@
 
 		resize: none;
 	}
+
+	table {
+		--margin: calc(-1 * var(--size-4xs));
+
+		margin-left: var(--margin);
+		margin-right: var(--margin);
+  }
 
 	.container {
 		padding: var(--size-m);
@@ -115,4 +122,8 @@
 	.-margin-3xl { margin: calc(-1 * var(--size-3xl)) }
 	.-margin-2xl { margin: calc(-1 * var(--size-2xl)) }
 	.-margin-1xl { margin: calc(-1 * var(--size-1xl)) }
+
+	.v-align-bottom { vertical-align: bottom }
+	.v-align-middle { vertical-align: middle }
+	.v-align-top { vertical-align: top }
 }
