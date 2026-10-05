@@ -33,7 +33,7 @@ export default function About() {
 	};
 
 	return (
-		<main className="padding-m">
+		<main className="container">
 			<h1>Details</h1>
 
 			<table>
