@@ -2,11 +2,12 @@ import ArrowLeft from '@tabler/icons/outline/arrow-left.svg';
 import Trash from '@tabler/icons/outline/trash.svg';
 import XMarkIcon from '@tabler/icons/outline/x.svg';
 import { nanoid } from 'nanoid/non-secure';
-import type {
-	FocusEventHandler,
-	GenericEventHandler,
-	SubmitEventHandler,
+import {
+	type FocusEventHandler,
+	type GenericEventHandler,
+	type SubmitEventHandler,
 } from 'preact';
+import type { PropsWithChildren } from 'preact/compat';
 import { useEffect, useState } from 'preact/hooks';
 import { useLocation, useRoute } from 'preact-iso';
 
@@ -133,81 +134,87 @@ export default function CardEdit() {
 
 	return (
 		<main className="container">
-			<header className="flex split">
-				<a className="btn link padding-0" href="/"><ArrowLeft /> Back to list</a>
+			<div className="full stack">
+				<header className="flex split">
+					<a className="btn link padding-0" href="/"><ArrowLeft /> Back to list</a>
 
-				{isNew
-				? (<span />)
-				: (
-						<button
-							className="danger padding-0 plain size-3xs"
-							command="show-modal"
-							commandFor={CONFIRM_MODAL_ID}
-							type="button"
-						>
-							<Trash className="size-5xl" />
-						</button>
-					)
-				}
-			</header>
-
-			<form
-				className="align-center stack"
-				id={FORM_ID}
-				onReset={handleReset}
-				onSubmit={handleSubmit}
-			>
-				<img className="size-5xl" src={logo} />
-
-				<img
-					alt={card.barcode}
-					className="container"
-					src={barcodeSrc}
-				/>
-
-				<label>
-					Merchant
-					<input
-						defaultValue={card.label}
-						id="label"
-						onBlur={getMerchantLogo}
-						placeholder="Costco"
-						required
-						type="text"
-					/>
-				</label>
-				<label>
-					Card number
-					<input
-						defaultValue={card.barcode}
-						id="barcode"
-						placeholder="4 003994 155486"
-						required
-						type="text"
-					/>
-				</label>
-				<label>
-					Notes
-					<textarea
-						defaultValue={card.notes}
-						id="notes"
-						placeholder="Whatever you want"
-					/>
-				</label>
-
-				<div className="split">
 					{isNew
-						? <button type="reset">Reset</button>
-						: <a className="btn neutral" href="/">Cancel</a>
+					? (<span />)
+					: (
+							<button
+								className="danger padding-0 plain size-3xs"
+								command="show-modal"
+								commandFor={CONFIRM_MODAL_ID}
+								type="button"
+							>
+								<Trash className="size-5xl" />
+							</button>
+						)
 					}
+				</header>
 
-					<button
-						className="primary"
-						disabled={disabled}
-						type="submit"
-					>Save</button>
-				</div>
-			</form>
+				<section className="align-center stack">
+					<img className="size-5xl" src={logo} />
+
+					<img
+						alt={card.barcode}
+						src={barcodeSrc}
+					/>
+				</section>
+
+				<EditWrapper isNew={isNew}>
+					<form
+						className="align-center stack"
+						id={FORM_ID}
+						onReset={handleReset}
+						onSubmit={handleSubmit}
+					>
+
+						<label>
+							Merchant
+							<input
+								defaultValue={card.label}
+								id="label"
+								onBlur={getMerchantLogo}
+								placeholder="Costco"
+								required
+								type="text"
+							/>
+						</label>
+						<label>
+							Card number
+							<input
+								defaultValue={card.barcode}
+								id="barcode"
+								placeholder="4 003994 155486"
+								required
+								type="text"
+							/>
+						</label>
+						<label>
+							Notes
+							<textarea
+								defaultValue={card.notes}
+								id="notes"
+								placeholder="Whatever you want"
+							/>
+						</label>
+
+						<div className="split">
+							{isNew
+								? <button type="reset">Reset</button>
+								: <a className="btn neutral" href="/">Cancel</a>
+							}
+
+							<button
+								className="primary"
+								disabled={disabled}
+								type="submit"
+							>Save</button>
+						</div>
+					</form>
+				</EditWrapper>
+			</div>
 
 			<dialog
 				closedBy="closerequest"
@@ -239,6 +246,18 @@ export default function CardEdit() {
 			</dialog>
 		</main>
 	);
+}
+
+function EditWrapper({ children, isNew }: PropsWithChildren<{ isNew: boolean }>) {
+	if (isNew) return children;
+
+	return (
+		<details>
+			<summary>Edit</summary>
+
+			{children}
+		</details>
+	)
 }
 
 const CONFIRM_MODAL_ID = 'confirm-delete';
