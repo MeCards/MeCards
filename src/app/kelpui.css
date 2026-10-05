@@ -63,9 +63,15 @@
 	}
 
 	table {
-    --margin: calc(-1 * var(--size-4xs));
+		--margin: calc(-1 * var(--size-4xs));
+
 		margin-left: var(--margin);
-    margin-right: var(--margin);
+		margin-right: var(--margin);
+  }
+
+	.container {
+		padding: var(--size-m);
+		width: 100%;
 	}
 
 	.toaster[popover] {

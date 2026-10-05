@@ -132,7 +132,7 @@ export default function CardEdit() {
 	};
 
 	return (
-		<main className="padding-m">
+		<main className="container">
 			<header className="flex split">
 				<a className="btn link padding-0" href="/"><ArrowLeft /> Back to list</a>
 
@@ -152,7 +152,7 @@ export default function CardEdit() {
 			</header>
 
 			<form
-				className="align-center container stack"
+				className="align-center stack"
 				id={FORM_ID}
 				onReset={handleReset}
 				onSubmit={handleSubmit}
