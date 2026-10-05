@@ -59,18 +59,20 @@ export default function About() {
 					<tr>
 						<td>Cards saved</td>
 						<td>
-							{cards.count}
-							{' '}
-							{!!cards.count && (
-								<button
-									className="danger padding-0 plain size-3xs"
-									command="show-modal"
-									commandFor={CONFIRM_MODAL_ID}
-									type="button"
-								>
-									<Trash className="size-5xl" />
-								</button>
-							)}
+							<div className="flex gap-m justify-between">
+								<span>{cards.count}</span>
+
+								{!!cards.count && (
+									<button
+										className="danger padding-0 plain size-3xs v-align-top"
+										command="show-modal"
+										commandFor={CONFIRM_MODAL_ID}
+										type="button"
+									>
+										<Trash className="inline size-5xl" />
+									</button>
+								)}
+							</div>
 						</td>
 					</tr>
 				</tbody>
