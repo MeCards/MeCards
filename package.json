@@ -51,7 +51,7 @@
     "@types/ejs": "^3.1.5",
     "@types/lodash.debounce": "^4.0.9",
     "@types/mime-types": "^3.0.1",
-    "@types/node": "^26.5.1",
+    "@types/node": "^26.6.4",
     "@types/serviceworker": "^0.0.202",
     "@types/web-app-manifest": "^1.0.9",
     "canvas": "^3.2.3",
