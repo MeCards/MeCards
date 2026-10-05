@@ -1,5 +1,5 @@
 {
-  "$schema": "https://nodejs.org/dist/v24.18.0/docs/node-config-schema.json",
+  "$schema": "https://nodejs.org/dist/v24.21.0/docs/node-config-schema.json",
   "nodeOptions": {
     "experimental-webstorage": true,
     "import": [
@@ -8,7 +8,7 @@
     "localstorage-file": "./test/.storage",
     "warnings": false
   },
-  "testRunner": {
+  "test": {
     "experimental-test-module-mocks": true,
     "experimental-test-coverage": true,
     "test-coverage-include": [
