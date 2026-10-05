@@ -83,7 +83,7 @@ export default function About() {
 				id={CONFIRM_MODAL_ID}
 			>
 				<header className="action-header">
-					<h1>Delete <em>all</em> card?</h1>
+					<h1>Delete <em>all</em> cards?</h1>
 
 					<button
 						aria-label="cancel"
