@@ -69,9 +69,13 @@
 		margin-right: var(--margin);
   }
 
-	.container {
+	[class*=container] {
+		--width: 100%;
+
+		align-self: center;
+		margin: unset;
 		padding: var(--size-m);
-		width: 100%;
+		width: var(--width);
 	}
 
 	.toaster[popover] {
