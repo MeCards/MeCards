@@ -185,12 +185,14 @@ export default function CardEdit() {
 						<label>
 							Card number
 							<input
-								defaultValue={card.barcode}
 								id="barcode"
 								onBlur={(e) => setBarcode(e.currentTarget.value)}
+								/** No need to continuously re-generate a barcode as the user types; do on blur */
+								onInput={(e) => setCard((prev) => ({ ...prev, barcode: e.currentTarget.value }))}
 								placeholder="4 003994 155486"
 								required
 								type="text"
+								value={card.barcode ?? ''}
 							/>
 						</label>
 						<label>
