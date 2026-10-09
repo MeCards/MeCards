@@ -1,14 +1,13 @@
 import ArrowLeft from '@tabler/icons/outline/arrow-left.svg';
 import Trash from '@tabler/icons/outline/trash.svg';
 import XMarkIcon from '@tabler/icons/outline/x.svg';
-import { nanoid } from 'nanoid/non-secure';
 import {
 	type FocusEventHandler,
 	type GenericEventHandler,
 	type SubmitEventHandler,
 } from 'preact';
 import type { PropsWithChildren } from 'preact/compat';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useId, useState } from 'preact/hooks';
 import { useLocation, useRoute } from 'preact-iso';
 
 import { cards, type CardData } from '../storage/cards.ts';
@@ -16,6 +15,7 @@ import { media } from '../storage/media.ts';
 import { useToaster } from '../toaster/context.tsx';
 import { generateBarcodeFile } from './generate-barcode.ts';
 import { composeMerchantSlug, retrieveMerchantLogo } from './merchant-info.ts';
+import Barcode from './BarcodeScanner.tsx';
 
 
 const FORM_ID = 'upsert';
@@ -24,6 +24,7 @@ const ID_NEW = 'new';
 export default function CardEdit() {
 	let id = useRoute().params.id!;
 	const isNew = id === ID_NEW;
+	if (isNew) id = useId();
 	const [card, setCard] = useState(
 		isNew
 		? {} as CardData
@@ -36,6 +37,16 @@ export default function CardEdit() {
 	const [logo, setLogo] = useState<URL['href']>();
 	const { route } = useLocation();
 	const { push } = useToaster();
+
+	const setBarcode = async (barcode: string) => {
+		setCard((prev) => ({ ...prev, barcode }));
+
+		await media.save(
+			generateBarcodeFile(barcode, id),
+			'card',
+		);
+		await media.createTmpUrl(`${id}.svg`, 'card', barcodeSrc).then(setBarcodeSrc);
+	};
 
 	const getMerchantLogo: FocusEventHandler<HTMLInputElement> = async ({
 		currentTarget: { value: merchantName },
@@ -88,7 +99,7 @@ export default function CardEdit() {
 		})
 	};
 
-	const handleReset: GenericEventHandler<HTMLFormElement> = () => setLogo('');
+	const handleReset: GenericEventHandler<HTMLFormElement> = () => location.reload();
 
 	const handleSubmit: SubmitEventHandler<HTMLFormElement & { elements: {
 		barcode: HTMLInputElement,
@@ -102,8 +113,6 @@ export default function CardEdit() {
 			notes: { value: notes },
 		} = event.currentTarget.elements;
 		const barcode = event.currentTarget.elements.barcode.value.replaceAll(/\s+/g, '');
-
-		if (id === 'new') id = nanoid(6);
 
 		cards.set(id, {
 			barcode,
@@ -121,13 +130,6 @@ export default function CardEdit() {
 			label,
 			notes,
 		});
-		media.createTmpUrl(`${id}.svg`, 'card', barcodeSrc)
-			.then(setBarcodeSrc)
-			.catch((err) => push({
-				kind: 'warning',
-				heading: 'No barcode found',
-				message: err.message,
-			}));
 
 		route('/');
 	};
@@ -156,8 +158,9 @@ export default function CardEdit() {
 				<section className="align-center stack">
 					<img className="size-5xl" src={logo} />
 
-					<img
-						alt={card.barcode}
+					<Barcode
+						card={card}
+						setBarcode={setBarcode}
 						src={barcodeSrc}
 					/>
 				</section>
@@ -186,6 +189,7 @@ export default function CardEdit() {
 							<input
 								defaultValue={card.barcode}
 								id="barcode"
+								onBlur={(e) => setBarcode(e.currentTarget.value)}
 								placeholder="4 003994 155486"
 								required
 								type="text"
