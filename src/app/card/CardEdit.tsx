@@ -42,11 +42,8 @@ export default function CardEdit() {
 	const setBarcode = async (barcode: string) => {
 		setCard((prev) => ({ ...prev, barcode }));
 
-		await media.save(
-			generateBarcodeFile(barcode, id),
-			'card',
-		);
-		await media.createTmpUrl(`${id}.svg`, 'card', barcodeSrc).then(setBarcodeSrc);
+		setBarcodeSrc(URL.createObjectURL(generateBarcodeFile(barcode, id)));
+		if (barcodeSrc) URL.revokeObjectURL(barcodeSrc);
 	};
 
 	const getMerchantLogo: FocusEventHandler<HTMLInputElement> = async ({
