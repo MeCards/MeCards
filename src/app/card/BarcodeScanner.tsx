@@ -1,4 +1,4 @@
-import { useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 
 import ScanBarcode from '@tabler/icons/outline/barcode.svg';
 import ToggleOn from '@tabler/icons/outline/toggle-right.svg';
@@ -33,43 +33,60 @@ export default function Barcode({
 		/>
 	);
 
-	if (!hasBarcodeDetector && getMobileOS(navigator, window) === 'iOS') push({
-		dismissable: true,
-		duration: -1,
-		kind: 'warning',
-		message: <ISOMessage />,
-	});
+	useEffect(() => {
+		if (!hasBarcodeDetector && getMobileOS(navigator, window) === 'iOS') push({
+			dismissable: true,
+			duration: -1,
+			kind: 'warning',
+			message: <ISOMessage />,
+		});
+	}, []);
 
-	const enableCamera = () => {
-		video.current!.play();
+	function stopScanner() {
+		for (const track of video.current?.getTracks()) track.stop();
+		video.current!.srcObject = null;
+		setIsScanning(false);
+	}
 
+	useEffect(() => stopScanner, []); // Clean up any active scanner on unmount to avoid memory leaks
+
+	const startScanner = () => {
 		navigator.mediaDevices.getUserMedia({ audio: false, video: true })
 			.then((stream) => {
 				video.current!.srcObject = stream;
 				setIsScanning(true);
 			});
+
+		//! This MUST be called **directly** (and synchronously) in the user-triggered event handler
+		//! NOT inside `getUserMedia`
+		// Can be called after getUserMedia is started though, so it can already run in the background.
+		video.current!.play();
 	};
 
+	/**
+	 * `BarcodeDetector.detect` checks the _current_ frame of the video feed, and then stops 😪 so it
+	 * has to be called continuously, effectively on every frame.
+	 */
 	const captureBarcode = () => (new BarcodeDetector()).detect(video.current!).then(handleScanEnded);
 
+	/** The scan result of the current frame. */
 	const handleScanEnded = ([barcode]: Awaited<ReturnType<BarcodeDetector['detect']>>) => {
-		if (!barcode) {
-			captureBarcode();
-		} else {
-			setBarcode(barcode.rawValue);
-			for (const track of video.current!.srcObject!.getTracks()) track.stop();
-			video.current!.srcObject = null;
-			setIsScanning(false);
-		}
+		if (!barcode) return void captureBarcode(); // Nothing in this frame; try again.
+
+		setBarcode(barcode.rawValue);
+		stopScanner();
 	};
+
+	if (!hasBarcodeDetector) return;
 
 	return (
 		<div className={styles.Container}>
 			{!isScanning && (
 				<button
+					aria-label="start barcode scanner"
 					className="aspect-ratio-16x9 container justify-center plain primary"
 					id={styles.ScanActivator}
-					onClick={enableCamera}
+					onClick={startScanner}
 				>
 					<ScanBarcode className="size-6xl" />
 				</button>
@@ -98,6 +115,7 @@ const ISOMessage = () => (
 				<li>Open the <code>Settings</code> app</li>
 				<li>Navigate to Apps → Safari → Advanced → Feature Flags</li>
 				<li><ToggleOn className="inline size-m" /> Toggle <code>Shape Detection API</code> "on"</li>
+				<li>Quit and relaunch the MeCards app</li>
 			</ol>
 		</details>
 	</>
