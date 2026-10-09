@@ -43,7 +43,7 @@ export default function Barcode({
 	}, []);
 
 	function stopScanner() {
-		for (const track of video.current?.getTracks()) track.stop();
+		for (const track of video.current?.srcObject?.getTracks()) track.stop();
 		video.current!.srcObject = null;
 		setIsScanning(false);
 	}
