@@ -72,7 +72,9 @@ export default function Barcode({
 	 * `BarcodeDetector.detect` checks the _current_ frame of the video feed, and then stops 😪 so it
 	 * has to be called continuously, effectively on every frame.
 	 */
-	const captureBarcode = () => (new BarcodeDetector()).detect(video.current!).then(handleScanEnded);
+	const captureBarcode = () => video.current && (new BarcodeDetector())
+		.detect(video.current)
+		.then(handleScanEnded);
 
 	/** The scan result of the current frame. */
 	const handleScanEnded = ([barcode]: Awaited<ReturnType<BarcodeDetector['detect']>>) => {
