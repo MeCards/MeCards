@@ -1,13 +1,14 @@
 import ArrowLeft from '@tabler/icons/outline/arrow-left.svg';
 import Trash from '@tabler/icons/outline/trash.svg';
 import XMarkIcon from '@tabler/icons/outline/x.svg';
+import { nanoid } from 'nanoid';
 import {
 	type FocusEventHandler,
 	type GenericEventHandler,
 	type SubmitEventHandler,
 } from 'preact';
 import type { PropsWithChildren } from 'preact/compat';
-import { useEffect, useId, useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { useLocation, useRoute } from 'preact-iso';
 
 import { cards, type CardData } from '../storage/cards.ts';
@@ -22,9 +23,9 @@ const FORM_ID = 'upsert';
 const ID_NEW = 'new';
 
 export default function CardEdit() {
-	let id = useRoute().params.id!;
-	const isNew = id === ID_NEW;
-	if (isNew) id = useId();
+	const { params } = useRoute();
+	const isNew = params.id === ID_NEW;
+	const [id] = useState(() => isNew ? nanoid(6) : params.id!);
 	const [card, setCard] = useState(
 		isNew
 		? {} as CardData
