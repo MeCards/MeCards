@@ -43,7 +43,9 @@ export default function Barcode({
 	}, []);
 
 	function stopScanner() {
-		for (const track of video.current?.srcObject?.getTracks()) track.stop();
+		// @ts-expect-error https://github.com/microsoft/TypeScript/issues/51671
+		const tracks = video.current?.srcObject?.getTracks();
+		for (const track of tracks) track.stop();
 		video.current!.srcObject = null;
 		setIsScanning(false);
 	}
