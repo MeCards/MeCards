@@ -19,10 +19,6 @@ permissions:
   contents: read
   pull-requests: write
 
-concurrency:
-  cancel-in-progress: false
-  group: pr-${{ github.event.pull_request.number }}
-
 jobs:
   gate:
     runs-on: ubuntu-slim
@@ -69,6 +65,10 @@ jobs:
     needs: gate
     if: needs.gate.outputs.action == 'deploy'
 
+    concurrency:
+      cancel-in-progress: false
+      group: pr-${{ github.event.pull_request.number }}
+
     runs-on: ubuntu-slim
 
     steps:
@@ -113,6 +113,10 @@ jobs:
   teardown:
     needs: gate
     if: needs.gate.outputs.action == 'teardown'
+
+    concurrency:
+      cancel-in-progress: false
+      group: pr-${{ github.event.pull_request.number }}
 
     runs-on: ubuntu-slim
 
