@@ -1,0 +1,141 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: PR Preview
+
+on:
+  pull_request:
+    types:
+      - closed
+      - labeled
+      - reopened
+      - synchronize
+      - unlabeled
+
+env:
+  LABEL: needs:preview
+  PROJECT: mecards # Cloudflare Pages project name
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  cancel-in-progress: false
+  group: pr-${{ github.event.pull_request.number }}
+
+jobs:
+  gate:
+    runs-on: ubuntu-slim
+
+    outputs:
+      action: ${{ steps.decide.outputs.action }}
+
+    steps:
+      - name: Decide action
+        id: decide
+        env:
+          BASE_REPO: ${{ github.repository }}
+          EVENT_ACTION: ${{ github.event.action }}
+          EVENT_LABEL: ${{ github.event.label.name }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          action=none
+          has_label=$(jq --arg l "$LABEL" 'index($l) != null' <<< "$PR_LABELS")
+
+          # Fork PRs can't access secrets, so never act on them
+          if [ "$HEAD_REPO" = "$BASE_REPO" ]; then
+            case "$EVENT_ACTION" in
+              synchronize|reopened)
+                [ "$has_label" = true ] && action=deploy ;;
+              labeled)
+                [ "$EVENT_LABEL" = "$LABEL" ] && action=deploy ;;
+              closed)
+                [ "$has_label" = true ] && action=teardown ;;
+              unlabeled)
+                [ "$EVENT_LABEL" = "$LABEL" ] && action=teardown ;;
+            esac
+          fi
+
+          echo "action=$action" >> "$GITHUB_OUTPUT"
+          echo "Decided: $action"
+
+  deploy:
+    needs: gate
+    if: needs.gate.outputs.action == 'deploy'
+
+    runs-on: ubuntu-slim
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Clean install dependencies
+        run: npm ci --audit=false --ignore-scripts
+
+      - name: Create prod build
+        run: node --run build:prod
+
+      - name: Deploy preview
+        id: deploy
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        with:
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: >-
+            pages deploy ./docs
+              --branch=pr-${{ github.event.pull_request.number }}
+              --commit-dirty=true
+              --commit-hash=${{ github.event.pull_request.head.sha }}
+              --project-name=${{ env.PROJECT }}
+
+      - name: Comment preview URL
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+        with:
+          header: preview
+          message: |
+            🚀 **Preview deployed**
+            - PR: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
+            - Commit `${{ github.event.pull_request.head.sha }}`: ${{ steps.deploy.outputs.deployment-url }}
+
+  teardown:
+    needs: gate
+    if: needs.gate.outputs.action == 'teardown'
+
+    runs-on: ubuntu-slim
+
+    steps:
+      - name: Delete preview deployments
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          BRANCH: pr-${{ github.event.pull_request.number }}
+          CF_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        with:
+          script: |
+            const { CF_API_TOKEN, CF_ACCOUNT_ID, BRANCH, PROJECT } = process.env;
+            const base = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects/${PROJECT}/deployments`;
+            const headers = { Authorization: `Bearer ${CF_API_TOKEN}` };
+
+            // Collect every preview deployment made for this PR's branch
+            const ids = new Set();
+            for (let page = 1; page <= 50; page++) {
+              const res = await fetch(`${base}?env=preview&per_page=25&page=${page}`, { headers });
+              const body = await res.json();
+              if (!body.success) throw new Error(JSON.stringify(body.errors));
+              if (body.result.length === 0) break;
+              for (const d of body.result) if (d.deployment_trigger?.metadata?.branch === BRANCH) ids.add(d.id);
+            }
+
+            // force=true is needed to delete a deployment that holds a branch alias
+            for (const id of ids) {
+              const res = await fetch(`${base}/${id}?force=true`, { method: 'DELETE', headers });
+              const body = await res.json();
+              if (!body.success) core.warning(`Failed to delete ${id}: ${JSON.stringify(body.errors)}`);
+              else core.info(`Deleted deployment ${id}`);
+            }
+
+      - name: Update comment
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+        with:
+          header: preview
+          message: "🧹 Preview taken down."
