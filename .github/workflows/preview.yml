@@ -150,7 +150,7 @@ jobs:
               // force=true is needed to delete a deployment that holds a branch alias
               const res = await fetch(`${base}/${id}?force=true`, { method: 'DELETE', headers });
               const body = await res.json();
-              if (!body.success) failures.push(new Error(`Failed to delete ${id}`, { cause: body.errors });
+              if (!body.success) failures.push(new Error(`Failed to delete ${id}`, { cause: body.errors }));
               else successes.push(id);
             }
 
