@@ -17,7 +17,6 @@ env:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   gate:
@@ -61,13 +60,12 @@ jobs:
           echo "action=$action" >> "$GITHUB_OUTPUT"
           echo "Decided: $action"
 
-  deploy:
+  build:
     needs: gate
     if: needs.gate.outputs.action == 'deploy'
 
-    concurrency:
-      cancel-in-progress: false
-      group: pr-${{ github.event.pull_request.number }}
+    permissions:
+      contents: read
 
     runs-on: ubuntu-slim
 
@@ -81,12 +79,46 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: Clean install dependencies
         run: npm ci --audit=false --ignore-scripts
 
       - name: Create prod build
         run: node --run build:prod
+
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: docs
+          path: docs
+          if-no-files-found: error
+
+  deploy:
+    needs: [gate, build]
+    if: needs.gate.outputs.action == 'deploy'
+
+    concurrency:
+      cancel-in-progress: false
+      group: pr-${{ github.event.pull_request.number }}
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    runs-on: ubuntu-slim
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Download docs artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: docs
+          path: docs
 
       - name: Deploy preview
         id: deploy
@@ -113,6 +145,10 @@ jobs:
   teardown:
     needs: gate
     if: needs.gate.outputs.action == 'teardown'
+
+    permissions:
+      contents: read
+      pull-requests: write
 
     concurrency:
       cancel-in-progress: false
