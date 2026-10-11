@@ -127,10 +127,10 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: >-
             pages deploy ./docs
-              --branch=pr-${{ github.event.pull_request.number }}
-              --commit-dirty=true
-              --commit-hash=${{ github.event.pull_request.head.sha }}
-              --project-name=${{ vars.CLOUDFLARE_PROJECT_NAME }}
+            --branch=pr-${{ github.event.pull_request.number }}
+            --commit-dirty=true
+            --commit-hash=${{ github.event.pull_request.head.sha }}
+            --project-name=${{ vars.CLOUDFLARE_PROJECT_NAME }}
 
       - name: Comment preview URL
         uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
