@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
-name: PR Preview
+name: Preview
 
 on:
   pull_request:
@@ -10,6 +10,11 @@ on:
       - reopened
       - synchronize
       - unlabeled
+  release:
+    types:
+      - deleted
+      - prereleased
+      - released
 
 env:
   LABEL: needs:preview
@@ -23,6 +28,8 @@ jobs:
 
     outputs:
       action: ${{ steps.decide.outputs.action }}
+      branch: ${{ steps.decide.outputs.branch }}
+      sha: ${{ steps.decide.outputs.sha }}
 
     steps:
       - name: Harden Runner
@@ -36,28 +43,51 @@ jobs:
           BASE_REPO: ${{ github.repository }}
           EVENT_ACTION: ${{ github.event.action }}
           EVENT_LABEL: ${{ github.event.label.name }}
+          EVENT_NAME: ${{ github.event_name }}
           HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
           PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           action=none
-          has_label=$(jq --arg l "$LABEL" 'index($l) != null' <<< "$PR_LABELS")
 
-          # Fork PRs can't access secrets, so never act on them
-          if [ "$HEAD_REPO" = "$BASE_REPO" ]; then
+          if [ "$EVENT_NAME" = release ]; then
+            # Tag names may contain shell metacharacters, so sanitize before using as a branch name
+            branch="prerelease-$(printf '%s' "$RELEASE_TAG" | tr -c 'A-Za-z0-9.-' '-')"
+
             case "$EVENT_ACTION" in
-              synchronize|reopened)
-                [ "$has_label" = true ] && action=deploy ;;
-              labeled)
-                [ "$EVENT_LABEL" = "$LABEL" ] && action=deploy ;;
-              closed)
-                [ "$has_label" = true ] && action=teardown ;;
-              unlabeled)
-                [ "$EVENT_LABEL" = "$LABEL" ] && action=teardown ;;
+              prereleased)
+                action=deploy ;;
+              # `released` also fires when a pre-release is promoted to a full release
+              released|deleted)
+                action=teardown ;;
             esac
+          else
+            branch="pr-${PR_NUMBER}"
+            has_label=$(jq --arg l "$LABEL" 'index($l) != null' <<< "$PR_LABELS")
+
+            # Fork PRs can't access secrets, so never act on them
+            if [ "$HEAD_REPO" = "$BASE_REPO" ]; then
+              case "$EVENT_ACTION" in
+                synchronize|reopened)
+                  [ "$has_label" = true ] && action=deploy ;;
+                labeled)
+                  [ "$EVENT_LABEL" = "$LABEL" ] && action=deploy ;;
+                closed)
+                  [ "$has_label" = true ] && action=teardown ;;
+                unlabeled)
+                  [ "$EVENT_LABEL" = "$LABEL" ] && action=teardown ;;
+              esac
+            fi
           fi
 
-          echo "action=$action" >> "$GITHUB_OUTPUT"
-          echo "Decided: $action"
+          {
+            echo "action=$action"
+            echo "branch=$branch"
+            echo "sha=$SHA"
+          } >> "$GITHUB_OUTPUT"
+          echo "Decided: $action ($branch @ $SHA)"
 
   build:
     needs: gate
@@ -74,10 +104,10 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Checkout PR HEAD
+      - name: Checkout commit (PR HEAD or Release tag)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ needs.gate.outputs.sha }}
           persist-credentials: false
 
       - name: Clean install dependencies
@@ -99,7 +129,11 @@ jobs:
 
     concurrency:
       cancel-in-progress: false
-      group: pr-${{ github.event.pull_request.number }}
+      group: ${{ needs.gate.outputs.branch }}
+
+    environment:
+      name: ${{ needs.gate.outputs.branch }}
+      url: ${{ steps.deploy.outputs.pages-deployment-alias-url || steps.deploy.outputs.deployment-url }}
 
     permissions:
       contents: read
@@ -133,12 +167,13 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: >-
             pages deploy ./docs
-            --branch=pr-${{ github.event.pull_request.number }}
+            --branch=${{ needs.gate.outputs.branch }}
             --commit-dirty=true
-            --commit-hash=${{ github.event.pull_request.head.sha }}
+            --commit-hash=${{ needs.gate.outputs.sha }}
             --project-name=${{ vars.CLOUDFLARE_PROJECT_NAME }}
 
       - name: Comment preview URL
+        if: github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
           header: preview
@@ -147,17 +182,31 @@ jobs:
             - PR: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
             - Commit `${{ github.event.pull_request.head.sha }}`: ${{ steps.deploy.outputs.deployment-url }}
 
+      - name: Summarize preview URL
+        if: github.event_name == 'release'
+        env:
+          ALIAS_URL: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          {
+            echo "🚀 **Preview deployed** for \`$TAG\`"
+            echo "- Release: $ALIAS_URL"
+            echo "- Deployment: $DEPLOYMENT_URL"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   teardown:
     needs: gate
     if: needs.gate.outputs.action == 'teardown'
 
     permissions:
       contents: read
+      deployments: write
       pull-requests: write
 
     concurrency:
       cancel-in-progress: false
-      group: pr-${{ github.event.pull_request.number }}
+      group: ${{ needs.gate.outputs.branch }}
 
     runs-on: ubuntu-slim
 
@@ -170,7 +219,7 @@ jobs:
       - name: Delete preview deployments
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          BRANCH: pr-${{ github.event.pull_request.number }}
+          BRANCH: ${{ needs.gate.outputs.branch }}
           CF_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_PROJECT_NAME: ${{ vars.CLOUDFLARE_PROJECT_NAME }}
@@ -209,7 +258,33 @@ jobs:
 
             core.info(`Successfully deleted all related previews: ${successes.join(', ')}`);
 
+      - name: Deactivate GitHub deployments
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          ENVIRONMENT: ${{ needs.gate.outputs.branch }}
+        with:
+          script: |
+            const { ENVIRONMENT } = process.env;
+            const { owner, repo } = context.repo;
+
+            const deployments = await github.paginate(github.rest.repos.listDeployments, {
+              owner,
+              repo,
+              environment: ENVIRONMENT,
+              per_page: 100,
+            });
+
+            for (const { id } of deployments) {
+              await github.rest.repos.createDeploymentStatus({
+                owner,
+                repo,
+                deployment_id: id,
+                state: 'inactive',
+              });
+            }
+
       - name: Update comment
+        if: github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
           header: preview
