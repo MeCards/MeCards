@@ -113,6 +113,12 @@ jobs:
       - name: Clean install dependencies
         run: npm ci --audit=false --ignore-scripts
 
+      - name: Set version
+        if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: npm version "$RELEASE_TAG" --no-git-tag-version --ignore-scripts
+
       - name: Create prod build
         run: node --run build:prod
 
