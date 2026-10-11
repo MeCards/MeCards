@@ -1,7 +1,10 @@
 import { fileURLToPath } from 'node:url';
 
 import { type BuildOptions } from 'esbuild';
+import { copy } from 'esbuild-plugin-copy';
+import { replace } from 'esbuild-plugin-replace';
 import svgr from 'esbuild-plugin-svgr';
+import { ZBAR_WASM_REPOSITORY } from '@undecaf/barcode-detector-polyfill/zbar-wasm';
 
 import { compileIndexEJSPlugin } from './compile-index-ejs.ts';
 import { compileWebManifestPlugin } from './compile-webmanifest.ts';
@@ -31,12 +34,23 @@ export const config: BuildOptions = {
 	jsx: 'automatic',
 	jsxImportSource: 'preact',
 	plugins: [
-		svgr({
-			icon: true, // strip `width` & `height` attrs
-		}),
+		svgr({ icon: true, /* strip `width` & `height` attrs */ }),
 		compileWebManifestPlugin(),
 		compileIndexEJSPlugin(),
 		compileServiceWorkerPlugin(),
+		replace({
+			values: {
+				[ZBAR_WASM_REPOSITORY]: '@undecaf/zbar-wasm', // Replaces the repository URL with a local reference
+				'/dist/main.js': '',
+				'/dist/index.js': '',
+			},
+		}),
+		copy({
+			assets: {
+				from: ['node_modules/@undecaf/zbar-wasm/dist/zbar.wasm'],
+				to: ['.'],
+			},
+		}),
 	],
 	outdir,
 	splitting: false, // https://github.com/evanw/esbuild/issues/4321

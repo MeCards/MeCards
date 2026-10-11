@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@tabler/icons": "^3.48.0",
+    "@undecaf/barcode-detector-polyfill": "^0.9.23",
     "clsx": "^2.1.1",
     "jsbarcode": "^3.12.3",
     "kelpui": "^1.17.2",
@@ -57,6 +58,8 @@
     "canvas": "^3.2.3",
     "ejs": "^6.0.1",
     "esbuild": "^0.25.12",
+    "esbuild-plugin-copy": "^2.1.1",
+    "esbuild-plugin-replace": "^2.0.0",
     "esbuild-plugin-svgr": "^3.1.1",
     "mime-types": "^3.0.2",
     "type-fest": "^5.10.0",

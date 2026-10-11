@@ -34,12 +34,11 @@ export default function Barcode({
 	);
 
 	useEffect(() => {
-		if (!hasBarcodeDetector && getMobileOS(navigator, window) === 'iOS') push({
-			dismissable: true,
-			duration: -1,
+		if (!hasBarcodeDetector) push({
 			kind: 'warning',
-			message: <ISOMessage />,
-		});
+			heading: 'No barcode scanning',
+			message: 'Your device does not support barcode detection, and attempts to patch it failed. You’ll have to enter the barcode manually.',
+		})
 	}, []);
 
 	function stopScanner() {
@@ -113,20 +112,3 @@ export default function Barcode({
 		</div>
 	);
 }
-
-const ISOMessage = () => (
-	<>
-		<p>Barcode scanning must be enabled in iOS's settings (because why not):</p>
-
-		<details>
-			<summary>Instructions</summary>
-
-			<ol>
-				<li>Open the <code>Settings</code> app</li>
-				<li>Navigate to Apps → Safari → Advanced → Feature Flags</li>
-				<li><ToggleOn className="inline size-m" /> Toggle <code>Shape Detection API</code> "on"</li>
-				<li>Quit and relaunch the MeCards app</li>
-			</ol>
-		</details>
-	</>
-);
