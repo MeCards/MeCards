@@ -56,7 +56,10 @@ export default function Barcode({
 	useEffect(() => stopScanner, []); // Clean up any active scanner on unmount to avoid memory leaks
 
 	const startScanner = () => {
-		navigator.mediaDevices.getUserMedia({ audio: false, video: true })
+		navigator.mediaDevices.getUserMedia({
+			audio: false,
+			video: { facingMode: 'environment' },
+		})
 			.then((stream) => {
 				video.current!.srcObject = stream;
 				setIsScanning(true);
