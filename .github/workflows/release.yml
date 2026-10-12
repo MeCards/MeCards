@@ -32,6 +32,16 @@ jobs:
       - name: Clean install dependencies
         run: npm ci --audit=false --ignore-scripts
 
+      - name: Set package version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          npm version "$RELEASE_TAG" --no-git-tag-version
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "release: \`$RELEASE_TAG\`"
+          git push origin HEAD:main
+
       - name: Create prod build
         run: node --run build:prod
 
