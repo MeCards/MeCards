@@ -33,6 +33,7 @@ export const config: BuildOptions = {
 	},
 	jsx: 'automatic',
 	jsxImportSource: 'preact',
+	platform: 'node', // needed for BarcodeDecoderPolyfill
 	plugins: [
 		svgr({ icon: true, /* strip `width` & `height` attrs */ }),
 		compileWebManifestPlugin(),
@@ -40,7 +41,7 @@ export const config: BuildOptions = {
 		compileServiceWorkerPlugin(),
 		replace({
 			values: {
-				[ZBAR_WASM_REPOSITORY]: '@undecaf/zbar-wasm', // Replaces the repository URL with a local reference
+				[ZBAR_WASM_REPOSITORY]: '@undecaf/zbar-wasm', // Replace with local ref
 				'/dist/main.js': '',
 				'/dist/index.js': '',
 			},
@@ -48,7 +49,7 @@ export const config: BuildOptions = {
 		copy({
 			assets: {
 				from: ['node_modules/@undecaf/zbar-wasm/dist/zbar.wasm'],
-				to: ['.'],
+				to: ['./app'],
 			},
 		}),
 	],
