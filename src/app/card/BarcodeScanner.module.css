@@ -1,0 +1,9 @@
+.Container {
+	max-width: var(--breakpoint-s);
+	position: relative;
+	width: 100%;
+}
+
+#ScanActivator {
+	position: absolute;
+}
