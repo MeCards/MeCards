@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 
 import ScanBarcode from '@tabler/icons/outline/barcode.svg';
-import ToggleOn from '@tabler/icons/outline/toggle-right.svg';
 
 import { hasBarcodeDetector } from '../Prerequisites/checks.ts';
 import { getMobileOS } from '../Prerequisites/getMobileOS.ts';
@@ -9,6 +8,7 @@ import type { CardData } from '../storage/cards.ts';
 import { useToaster } from '../toaster/context.tsx';
 
 import styles from './BarcodeScanner.module.css';
+import type { PropsWithChildren } from 'preact/compat';
 
 
 type BarcodeProps = {
@@ -34,12 +34,19 @@ export default function Barcode({
 	);
 
 	useEffect(() => {
-		if (!hasBarcodeDetector && getMobileOS(navigator, window) === 'iOS') push({
-			dismissable: true,
-			duration: -1,
-			kind: 'warning',
-			message: <ISOMessage />,
-		});
+		if (!hasBarcodeDetector) {
+			let Message = DefaultMessage;
+			if (getMobileOS(navigator, window) === 'iOS') Message = ISOMessage;
+			else if (isFirefox(navigator)) Message = FirefoxMessage;
+
+			push({
+				dismissable: true,
+				duration: -1,
+				heading: 'Barcode scanner disabled',
+				kind: 'warning',
+				message: <Message>You’ll have to enter the barcode manually.</Message>,
+			});
+		}
 	}, []);
 
 	function stopScanner() {
@@ -114,19 +121,30 @@ export default function Barcode({
 	);
 }
 
-const ISOMessage = () => (
+const DefaultMessage = ({ children }: PropsWithChildren) => (
 	<>
-		<p>Barcode scanning must be enabled in iOS's settings (because why not):</p>
+		<p>Your device or browser does not support barcode detection.</p>
 
-		<details>
-			<summary>Instructions</summary>
-
-			<ol>
-				<li>Open the <code>Settings</code> app</li>
-				<li>Navigate to Apps → Safari → Advanced → Feature Flags</li>
-				<li><ToggleOn className="inline size-m" /> Toggle <code>Shape Detection API</code> "on"</li>
-				<li>Quit and relaunch the MeCards app</li>
-			</ol>
-		</details>
+		<p>{children}</p>
 	</>
 );
+
+const ISOMessage = ({ children }: PropsWithChildren) => (
+	<>
+		<p>
+			iOS's barcode detection is broken (see <a href="https://bugs.webkit.org/show_bug.cgi?id=281848">WebKit <code>281848</code></a>).
+		</p>
+
+		<p>{children}</p>
+	</>
+);
+
+const FirefoxMessage = ({ children }: PropsWithChildren) => (
+	<>
+		<p>Firefox does not support barcode detection (see <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1553738">Bugzilla <code>1553738</code></a>).</p>
+
+		<p>{children}</p>
+	</>
+);
+
+const isFirefox = (navigator: Navigator) => navigator.userAgent.includes('Firefox');
