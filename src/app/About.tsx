@@ -8,6 +8,7 @@ import { hasPersistedStorage, isInstalled } from './Prerequisites/checks.ts';
 import { cards } from './storage/cards.ts';
 import { useToaster } from './toaster/context.tsx';
 import { media } from './storage/media.ts';
+import ExLink from './ExLink.tsx';
 
 
 export default function About() {
@@ -113,7 +114,7 @@ export default function About() {
 
 			<p>This app is not monetised in any way, and there is no intention to ever do so.</p>
 
-			<p>It’s <a href={`https://github.com/${pjson.repository.split(':')[1]}`}>open-source</a>, and works fully offline (except when fetching a merchant’s logo from <a href="https://commons.wikimedia.org/">WikiMedia</a>). All data you enter is stored locally on your device and never sent to third parties. The app is solely a client application—it has no server and nowhere to send any of your information.</p>
+			<p>It’s <ExLink href={`https://github.com/${pjson.repository.split(':')[1]}`}>open-source</ExLink>, and works fully offline (except when fetching a merchant’s logo from <ExLink href="https://commons.wikimedia.org/">WikiMedia</ExLink>). All data you enter is stored locally on your device and never sent to third parties. The app is solely a client application—it has no server and nowhere to send any of your information.</p>
 
 			<p>There’s currently no analytics or telemetry; if added in future, it will be a privacy-centric feature (for instance, automatically creating anoynomised bug reports in the project repo when an error is encountered).</p>
 		</main>
