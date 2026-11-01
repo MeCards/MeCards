@@ -37,7 +37,12 @@ export default function CardList() {
 const Card = ({ barcode, label, id }: CardData & { id: CardId }) => (
 	<a className="callout neutral" href={`/card/${id}`}>
 		<figure className="align-center direction-column flex">
-			<img className={styles.CardListIcon} src={media.composeUrlPath(`${composeMerchantSlug(label)}.svg`, 'logo')} />
+			<img
+				alt=""
+				aria-hidden="true"
+				className={styles.CardListIcon}
+				src={media.composeUrlPath(`${composeMerchantSlug(label)}.svg`, 'logo')}
+			/>
 
 			<figcaption>{label} ({barcode.slice(-4)})</figcaption>
 		</figure>

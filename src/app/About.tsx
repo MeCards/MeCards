@@ -64,6 +64,7 @@ export default function About() {
 
 								{!!cards.count && (
 									<button
+										aria-label="delete all cards"
 										className="danger padding-0 plain size-3xs v-align-top"
 										command="show-modal"
 										commandFor={CONFIRM_MODAL_ID}

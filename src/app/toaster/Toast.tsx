@@ -109,7 +109,7 @@ export default function Toast({ toast, removeImmediately = false }: ToastProps) 
     >
       {showDismiss && (
         <button
-          aria-heading="dismiss toast"
+          aria-label="dismiss toast"
           className="padding-6xs plain"
           onClick={handleDismiss}
           type="button"
