@@ -142,6 +142,7 @@ export default function CardEdit() {
 					? (<span />)
 					: (
 							<button
+								aria-label="delete this card"
 								className="danger padding-0 plain size-3xs"
 								command="show-modal"
 								commandFor={CONFIRM_MODAL_ID}
@@ -154,7 +155,7 @@ export default function CardEdit() {
 				</header>
 
 				<section className="align-center stack">
-					<img className="size-5xl" src={logo} />
+					<img alt={logo && card.label ? `Logo for ${card.label}` : ''} className="size-5xl" src={logo} />
 
 					<Barcode
 						card={card}

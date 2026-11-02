@@ -24,9 +24,11 @@ export function AppNav() {
 
 	return (
 		<footer className={clsx(styles.AppNav, 'flex gap-m justify-center')}>
-			{path !== '/about' && (<a className="flex-inline" href="/about">
-				<Info className="size-5xl" />
-			</a>)}
+			{path !== '/about' && (
+				<a className="flex-inline" href="/about" aria-label="about the app">
+					<Info className="size-5xl" />
+				</a>
+			)}
 
 			{path === '/'
 				? (
@@ -43,15 +45,17 @@ export function AppNav() {
 					</label>
 				)
 				: (
-					<a className="flex-inline" href="/">
+					<a className="flex-inline" href="/" aria-label="list of cards">
 						<Wallet className="size-5xl" />
 					</a>
 				)
 			}
 
-			{!path.startsWith('/card') && (<a className="flex-inline" href="/card/new">
-				<AddNew className="size-5xl" />
-			</a>)}
+			{!path.startsWith('/card') && (
+				<a className="flex-inline" href="/card/new" aria-label="add a new card">
+					<AddNew className="size-5xl" />
+				</a>
+			)}
 		</footer>
 	);
 }
