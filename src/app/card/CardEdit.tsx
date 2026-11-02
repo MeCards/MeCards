@@ -155,7 +155,7 @@ export default function CardEdit() {
 				</header>
 
 				<section className="align-center stack">
-					<img alt={logo ? `Logo for ${card.label}` : ''} aria-hidden="true" className="size-5xl" src={logo} />
+					<img alt={logo && card.label ? `Logo for ${card.label}` : ''} className="size-5xl" src={logo} />
 
 					<Barcode
 						card={card}
