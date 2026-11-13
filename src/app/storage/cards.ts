@@ -4,10 +4,10 @@ export const cards = {
 	clear() {
 		const keys = Object.keys(localStorage).filter((key) => key.startsWith(PFX));
 		for (const key of keys) localStorage.removeItem(key);
-		return keys;
+		return keys.map((key) => key.slice(PFX.length));
 	},
 	get count() {
-		return localStorage.length;
+		return Object.keys(localStorage).filter((key) => key.startsWith(PFX)).length;
 	},
 	delete(key: CardId) {
 		localStorage.removeItem(`${PFX}${key}`);
