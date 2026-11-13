@@ -103,7 +103,7 @@
 		}
 
 		& + & {
-			translate: 0 calc(-100% + var(--size-m));
+			translate: 0 calc(-50% - var(--size-m));
 		}
 	}
 }
