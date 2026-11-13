@@ -1,21 +1,24 @@
 const settings = {
-	delete(key: string) {
-		localStorage.removeItem(key);
+	delete(key: string, duration: 'forever' | 'temp' = 'forever') {
+		const storage = duration === 'temp' ? sessionStorage : localStorage;
+		storage.removeItem(key);
 	},
-	get(key: string) {
-		const val = localStorage.getItem(key);
+	get(key: string, duration: 'forever' | 'temp' = 'forever') {
+		const storage = duration === 'temp' ? sessionStorage : localStorage;
+		const val = storage.getItem(key);
 		if (val == null) return val;
 
 		try { return JSON.parse(val) } catch {}
 
 		return val;
 	},
-	set(key: string, val: unknown) {
-		localStorage.setItem(key, JSON.stringify(val));
+	set(key: string, val: unknown, duration: 'forever' | 'temp' = 'forever') {
+		const storage = duration === 'temp' ? sessionStorage : localStorage;
+		storage.setItem(key, JSON.stringify(val));
 	},
 };
 export default settings;
 
 export const FLAG_KEYS = {
-	NO_SCANNER: 'warned:no-scanner',
+	NO_SCANNER: 'flag:warned-no-scanner',
 };

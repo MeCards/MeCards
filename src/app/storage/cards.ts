@@ -1,28 +1,31 @@
+const PFX = 'card:';
+
 export const cards = {
 	clear() {
-		const keys = Object.keys(localStorage);
-		localStorage.clear();
+		const keys = Object.keys(localStorage).filter((key) => key.startsWith(PFX));
+		for (const key of keys) localStorage.removeItem(key);
 		return keys;
 	},
 	get count() {
 		return localStorage.length;
 	},
 	delete(key: CardId) {
-		localStorage.removeItem(key);
+		localStorage.removeItem(`${PFX}${key}`);
 	},
 	get(key: CardId) {
-		const val = localStorage.getItem(key);
+		const val = localStorage.getItem(`${PFX}${key}`);
 		return val == null
 			? val
 			: JSON.parse(val) as CardData;
 	},
 	* getAll() {
 		for (const [key, val] of Object.entries(localStorage)) {
-			yield [key, JSON.parse(val)] as [CardId, CardData];
+			if (!key.startsWith(PFX)) continue;
+			yield [key.split(PFX)[1], JSON.parse(val)] as [CardId, CardData];
 		}
 	},
 	set(key: CardId, val: CardData) {
-		localStorage.setItem(key, JSON.stringify(val));
+		localStorage.setItem(`${PFX}${key}`, JSON.stringify(val));
 	},
 };
 

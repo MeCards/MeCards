@@ -35,7 +35,7 @@ export default function Barcode({
 	);
 
 	useEffect(() => {
-		if (!hasBarcodeDetector && !settings.get(FLAG_KEYS.NO_SCANNER)) {
+		if (!hasBarcodeDetector && !settings.get(FLAG_KEYS.NO_SCANNER, 'temp')) {
 			let Message = DefaultMessage;
 			if (getMobileOS(navigator, window) === 'iOS') Message = ISOMessage;
 			else if (isFirefox(navigator)) Message = FirefoxMessage;
@@ -48,7 +48,7 @@ export default function Barcode({
 				message: <Message>You’ll have to enter the barcode manually.</Message>,
 			});
 
-			settings.set(FLAG_KEYS.NO_SCANNER, true);
+			settings.set(FLAG_KEYS.NO_SCANNER, true, 'temp');
 		}
 	}, []);
 
