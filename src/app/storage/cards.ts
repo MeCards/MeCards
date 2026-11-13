@@ -1,4 +1,5 @@
-const PFX = 'card:';
+/** @private exported for testing */
+export const PFX = 'card:';
 
 // Migrate existing items per breaking change in https://github.com/MeCards/MeCards/pull/61
 // FIXME: remove after a month
