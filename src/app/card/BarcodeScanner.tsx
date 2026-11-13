@@ -9,7 +9,7 @@ import { useToaster } from '../toaster/context.tsx';
 
 import styles from './BarcodeScanner.module.css';
 import type { PropsWithChildren } from 'preact/compat';
-import settings, { FLAG_KEYS } from '../storage/settings.ts';
+import { FLAG_KEYS, settings } from '../storage/settings.ts';
 
 
 type BarcodeProps = {
