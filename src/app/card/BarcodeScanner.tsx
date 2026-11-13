@@ -9,6 +9,7 @@ import { useToaster } from '../toaster/context.tsx';
 
 import styles from './BarcodeScanner.module.css';
 import type { PropsWithChildren } from 'preact/compat';
+import settings, { FLAG_KEYS } from '../storage/settings.ts';
 
 
 type BarcodeProps = {
@@ -34,7 +35,7 @@ export default function Barcode({
 	);
 
 	useEffect(() => {
-		if (!hasBarcodeDetector) {
+		if (!hasBarcodeDetector && !settings.get(FLAG_KEYS.NO_SCANNER)) {
 			let Message = DefaultMessage;
 			if (getMobileOS(navigator, window) === 'iOS') Message = ISOMessage;
 			else if (isFirefox(navigator)) Message = FirefoxMessage;
@@ -46,6 +47,8 @@ export default function Barcode({
 				kind: 'warning',
 				message: <Message>You’ll have to enter the barcode manually.</Message>,
 			});
+
+			settings.set(FLAG_KEYS.NO_SCANNER, true);
 		}
 	}, []);
 
