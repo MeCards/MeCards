@@ -3,7 +3,7 @@ import { afterEach, describe, it } from 'node:test';
 
 import { nanoid } from 'nanoid/non-secure';
 
-import { cards } from './cards.ts';
+import { cards, PFX } from './cards.ts';
 
 
 // Can't use concurrency because localStorage is a shared resource
@@ -181,7 +181,7 @@ describe('Card storage', { concurrency: false }, () => {
 
 			const clearedKeys = cards.clear();
 
-			assert.deepEqual(new Set(clearedKeys), new Set([key1, key2]));
+			assert.deepEqual(new Set(clearedKeys), new Set([`${PFX}${key1}`, `${PFX}${key2}`]));
 		});
 
 		it('on an already-empty store returns an empty array', () => {
