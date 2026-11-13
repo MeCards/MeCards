@@ -1,5 +1,15 @@
 const PFX = 'card:';
 
+// Migrate existing items per breaking change in https://github.com/MeCards/MeCards/pull/61
+// FIXME: remove after a month
+if (!localStorage.getItem('migration:storage-prefix')) {
+	for (const [key, val] of Object.entries(localStorage)) {
+		localStorage.setItem(`${PFX}${key}`, val);
+		localStorage.removeItem(key);
+	}
+	localStorage.setItem('migration:storage-prefix', 'true');
+}
+
 export const cards = {
 	clear() {
 		const keys = Object.keys(localStorage).filter((key) => key.startsWith(PFX));
