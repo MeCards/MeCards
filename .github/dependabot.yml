@@ -4,8 +4,8 @@ version: 2
 updates:
   - package-ecosystem: npm
     commit-message:
-      prefix: deps
-      include: scope
+      prefix: "deps(prod)"
+      prefix-development: "deps(dev)"
     directory: /
     labels:
       - "deps"
@@ -15,8 +15,7 @@ updates:
       interval: monthly
   - package-ecosystem: github-actions
     commit-message:
-      prefix: setup
-      include: scope
+      prefix: "deps(setup)"
     directory: /
     labels:
       - "deps"
