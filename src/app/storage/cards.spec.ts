@@ -163,11 +163,17 @@ describe('Card storage', { concurrency: false }, () => {
 	});
 
 	describe('clear', () => {
-		it('empties the store', () => {
+		it('empties the store', (t) => {
 			cards.set(nanoid(6), val);
 			cards.set(nanoid(6), val);
 
-			cards.clear();
+			const keys = cards.clear();
+			t.test('key prefix removed', () => {
+				assert.equal(keys.length, 2);
+				const rgx = new RegExp(PFX);
+				assert.doesNotMatch(keys[0], rgx);
+				assert.doesNotMatch(keys[1], rgx);
+			});
 
 			assert.equal(cards.count, 0);
 			assert.deepEqual([...cards.getAll()], []);
@@ -181,7 +187,7 @@ describe('Card storage', { concurrency: false }, () => {
 
 			const clearedKeys = cards.clear();
 
-			assert.deepEqual(new Set(clearedKeys), new Set([`${PFX}${key1}`, `${PFX}${key2}`]));
+			assert.deepEqual(new Set(clearedKeys), new Set([key1, key2]));
 		});
 
 		it('on an already-empty store returns an empty array', () => {
