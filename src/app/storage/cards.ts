@@ -15,7 +15,7 @@ export const cards = {
 	clear() {
 		const keys = Object.keys(localStorage).filter((key) => key.startsWith(PFX));
 		for (const key of keys) localStorage.removeItem(key);
-		return keys;
+		return keys.map((k) => k.split(PFX)[1]);
 	},
 	get count() {
 		return Object.keys(localStorage).filter((key) => key.startsWith(PFX)).length;
